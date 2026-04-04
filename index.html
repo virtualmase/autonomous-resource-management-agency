@@ -1,0 +1,3104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARM Agency — Autonomous Resource Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a08;
+    --bg2: #0d100d;
+    --bg3: #111411;
+    --grid: rgba(255,255,255,0.03);
+    --amber: #e8a020;
+    --amber-dim: #a06010;
+    --green: #3ddc84;
+    --green-dim: #1a7040;
+    --text: #c8cfc8;
+    --text-dim: #667066;
+    --text-bright: #eaf0ea;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(232,160,32,0.3);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Radial glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 60vh;
+    background: radial-gradient(ellipse at center, rgba(232,160,32,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    height: 60px;
+    background: rgba(8,10,8,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-bright);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .nav-logo-mark {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--amber); }
+  .nav-links a.nav-active { color: var(--amber); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber) !important;
+    padding: 6px 16px;
+    font-family: var(--mono);
+    font-size: 11px !important;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s !important;
+  }
+
+  .nav-cta:hover {
+    background: var(--amber) !important;
+    color: var(--bg) !important;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    position: relative;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero-tag::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--amber);
+  }
+
+  .hero-h1 {
+    font-family: var(--mono);
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-bright);
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero-h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    margin-top: 2rem;
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text);
+    max-width: 520px;
+    line-height: 1.9;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.6s;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.8s;
+  }
+
+  .btn-primary {
+    padding: 12px 28px;
+    background: var(--amber);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-ghost {
+    padding: 12px 28px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover { border-color: var(--text); color: var(--text-bright); }
+
+  /* Hero stats */
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    margin-top: 5rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 1s;
+  }
+
+  .stat-val {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+  }
+
+  .stat-val span { color: var(--amber); }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Hero right — terminal block */
+  .hero-terminal {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 360px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--amber);
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.1s;
+  }
+
+  .terminal-bar {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .terminal-bar::before {
+    content: '';
+    display: block;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  .terminal-body {
+    padding: 16px;
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  .t-dim { color: var(--text-dim); }
+  .t-green { color: var(--green); }
+  .t-amber { color: var(--amber); }
+  .t-bright { color: var(--text-bright); }
+
+  .cursor {
+    display: inline-block;
+    width: 6px;
+    height: 14px;
+    background: var(--amber);
+    vertical-align: middle;
+    animation: blink 1.2s step-end infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── SECTION COMMON ── */
+  section { padding: 6rem 3rem; }
+
+  .section-tag {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-tag::after {
+    content: '';
+    display: block;
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--amber-dim);
+  }
+
+  .section-h2 {
+    font-family: var(--mono);
+    font-size: clamp(1.8rem, 3.5vw, 3rem);
+    font-weight: 300;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    max-width: 700px;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-lead {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text);
+    max-width: 580px;
+    line-height: 1.9;
+  }
+
+  /* ── CAPABILITIES ── */
+  #capabilities { background: var(--bg2); }
+
+  .caps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    margin-top: 4rem;
+    border: 1px solid var(--border);
+  }
+
+  .cap-card {
+    padding: 2.5rem;
+    background: var(--bg2);
+    border: none;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .cap-card:hover { background: var(--bg3); }
+
+  .cap-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+
+  .cap-card:hover::before { background: var(--amber); }
+
+  .cap-num {
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+  }
+
+  .cap-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  .cap-desc {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.9;
+  }
+
+  .cap-tag {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    border: 1px solid var(--green-dim);
+    padding: 3px 8px;
+  }
+
+  /* ── SIGNAL STRIP ── */
+  .signal-strip {
+    padding: 2rem 3rem;
+    background: var(--bg3);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .signal-track {
+    display: flex;
+    gap: 4rem;
+    animation: scroll 20s linear infinite;
+    white-space: nowrap;
+  }
+
+  .signal-item {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .signal-item span { color: var(--amber); margin-right: 8px; }
+
+  @keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  /* ── HOW IT WORKS ── */
+  .steps {
+    margin-top: 4rem;
+    display: grid;
+    gap: 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 2rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 0.1em;
+    padding-top: 4px;
+  }
+
+  .step-content {}
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .step-desc {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.9;
+    max-width: 500px;
+  }
+
+  /* ── LEADERSHIP ── */
+  #leadership { background: var(--bg2); }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    margin-top: 4rem;
+    border: 1px solid var(--border);
+  }
+
+  .team-card {
+    padding: 2.5rem;
+    background: var(--bg2);
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .team-card:hover { background: var(--bg3); }
+
+  .team-avatar {
+    width: 56px;
+    height: 56px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--amber);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .team-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .team-role {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    margin-bottom: 1rem;
+  }
+
+  .team-bio {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.9;
+  }
+
+  /* ── BLOG ── */
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1px;
+    margin-top: 4rem;
+    border: 1px solid var(--border);
+  }
+
+  .post-card {
+    padding: 2rem;
+    background: var(--bg);
+    transition: background 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+
+  .post-card:hover { background: var(--bg2); }
+
+  .post-cat {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 1rem;
+  }
+
+  .post-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-bright);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+  }
+
+  .post-excerpt {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .post-meta {
+    margin-top: 1.5rem;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  /* ── CONTACT ── */
+  #contact { background: var(--bg2); }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    margin-top: 4rem;
+    align-items: start;
+  }
+
+  .contact-info p {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.9;
+    margin-bottom: 2rem;
+  }
+
+  .contact-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .contact-row {
+    display: flex;
+    gap: 1rem;
+    font-size: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .contact-row-label {
+    color: var(--text-dim);
+    min-width: 80px;
+    letter-spacing: 0.05em;
+  }
+
+  .contact-row-val {
+    color: var(--amber);
+  }
+
+  /* Form */
+  .form { display: flex; flex-direction: column; gap: 16px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    width: 100%;
+  }
+
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
+    border-color: var(--amber);
+  }
+
+  .form-field input::placeholder,
+  .form-field textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  .form-field select option { background: var(--bg2); }
+
+  .btn-submit {
+    padding: 14px 28px;
+    background: var(--amber);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: opacity 0.2s;
+  }
+
+  .btn-submit:hover { opacity: 0.85; }
+
+  .form-confirm {
+    display: none;
+    padding: 1rem;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--amber); }
+
+
+  /* ── ARCHITECTURE STACK ── */
+  .arch-stack { display: flex; flex-direction: column; gap: 1px; }
+
+  .arch-layer {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.25rem 2rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .arch-layer:hover { background: var(--bg3); border-left-color: var(--amber); }
+
+  .arch-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .arch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .arch-chip {
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    letter-spacing: 0.06em;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .arch-layer:hover .arch-chip { color: var(--text); border-color: rgba(255,255,255,0.12); }
+
+  .arch-crosscut {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--amber-dim);
+  }
+
+  .arch-cc-item { padding: 1.5rem; background: var(--bg3); }
+  .arch-cc-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem; color: var(--text-dim); }
+  .arch-cc-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .arch-cc-pills span { font-size: 10px; color: var(--text-dim); border: 1px solid var(--border); padding: 2px 7px; }
+
+  /* ── PRINCIPLES ── */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+  }
+
+  .principle-card {
+    padding: 2rem 1.5rem;
+    background: var(--bg);
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .principle-card:hover { background: var(--bg2); }
+  .principle-card:hover::before { background: var(--amber); }
+
+  .principle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.2s;
+  }
+
+  .p-num {
+    font-size: 10px;
+    color: var(--amber-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+
+  .p-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.005em;
+  }
+
+  .p-desc {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .comp-table-wrap { border: 1px solid var(--border); }
+
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .comp-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    background: var(--bg3);
+  }
+
+  .comp-table .col-arm {
+    background: rgba(232,160,32,0.05);
+    color: var(--amber);
+    border-left: 1px solid var(--border-accent);
+    border-right: 1px solid var(--border-accent);
+  }
+
+  .comp-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    vertical-align: middle;
+  }
+
+  .comp-table tr:last-child td { border-bottom: none; }
+
+  .comp-group td {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    background: var(--bg3);
+    padding: 8px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .t-yes { color: var(--green); font-size: 14px; text-align: center; }
+  .t-no { color: var(--text-dim); opacity: 0.4; font-size: 14px; text-align: center; }
+  .t-partial { color: var(--amber-dim); font-size: 14px; text-align: center; }
+
+  .comp-legend {
+    display: flex;
+    gap: 2rem;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 0.75rem 1rem;
+  }
+
+  .comp-legend .t-yes,
+  .comp-legend .t-partial,
+  .comp-legend .t-no { font-size: 11px; margin-right: 4px; }
+
+  /* ── WORKFLOW TRACE ── */
+  .workflow-trace { display: flex; flex-direction: column; gap: 1px; }
+
+  .wf-step {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .wf-step:hover { background: var(--bg2); }
+
+  .wf-idx {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--amber-dim);
+    border-right: 1px solid var(--border);
+    letter-spacing: 0.1em;
+  }
+
+  .wf-body {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .wf-actor {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .wf-action {
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--sans);
+    flex: 1;
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .wf-proto {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    white-space: nowrap;
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .wf-bft { color: var(--amber); border-color: var(--amber-dim); }
+  .wf-hitl { color: #c07ee8; border-color: rgba(192,126,232,0.3); }
+  .wf-ap2 { color: var(--green); border-color: var(--green-dim); }
+
+  .wf-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--amber-dim);
+  }
+
+  .wf-stat {
+    padding: 1.5rem;
+    background: var(--bg2);
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .wf-stat:last-child { border-right: none; }
+
+  .wf-stat span {
+    display: block;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--amber);
+    letter-spacing: -0.02em;
+  }
+
+  .wf-stat small {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+
+
+  @media (max-width: 700px) {
+    .principles-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── INSIGHTS / BLOG ── */
+  #blog { background: var(--bg); }
+
+  .blog-filter-bar {
+    display: flex;
+    gap: 0;
+    margin: 3rem 0 0;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+
+  .filter-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .filter-btn:last-child { border-right: none; }
+  .filter-btn:hover { color: var(--amber); background: var(--bg2); }
+  .filter-btn.active { color: var(--bg); background: var(--amber); }
+
+  .post-featured {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    margin-top: 2rem;
+    transition: border-color 0.3s;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+
+  .post-featured:hover { border-color: var(--amber-dim); }
+
+  .post-featured::before {
+    content: 'FEATURED';
+    position: absolute;
+    top: 0; left: 0;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--bg);
+    background: var(--amber);
+    padding: 4px 10px;
+    z-index: 1;
+  }
+
+  .post-featured-visual {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 3rem;
+  }
+
+  .post-featured-body {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--bg2);
+  }
+
+  .post-featured:hover .post-featured-body { background: var(--bg3); }
+
+  .featured-cat {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+
+  .featured-title {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-bright);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    margin-bottom: 1rem;
+  }
+
+  .featured-excerpt {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.9;
+    margin-bottom: 1.5rem;
+  }
+
+  .featured-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+
+  .tag-pill {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+  }
+
+  .featured-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 1.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    align-items: center;
+  }
+
+  .featured-meta-author { color: var(--text); }
+  .read-link { margin-left: auto; font-size: 11px; color: var(--amber); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .posts-grid-new {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-top: 1px;
+    border: 1px solid var(--border);
+    border-top: none;
+  }
+
+  .post-card-new {
+    padding: 2rem;
+    background: var(--bg);
+    transition: background 0.25s;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    border-right: 1px solid var(--border);
+  }
+
+  .post-card-new:last-child { border-right: none; }
+  .post-card-new:hover { background: var(--bg2); }
+  .post-card-new:hover .post-read-arrow { color: var(--amber); }
+
+  .post-type {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .type-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .type-case .type-dot { background: var(--amber); }
+  .type-case { color: var(--amber); }
+  .type-tech .type-dot { background: var(--green); }
+  .type-tech { color: var(--green); }
+  .type-paper .type-dot { background: #6ea8e8; }
+  .type-paper { color: #6ea8e8; }
+  .type-insight .type-dot { background: #c07ee8; }
+  .type-insight { color: #c07ee8; }
+
+  .post-title-new {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-bright);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.005em;
+  }
+
+  .post-excerpt-new {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.9;
+    flex: 1;
+  }
+
+  .post-kws {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 1rem 0;
+  }
+
+  .kw {
+    font-size: 10px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    letter-spacing: 0.06em;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .post-card-new:hover .kw { border-color: rgba(232,160,32,0.2); color: var(--text); }
+
+  .post-meta-new {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    align-items: center;
+  }
+
+  .post-read-arrow { color: var(--text-dim); font-size: 13px; transition: color 0.2s; }
+
+  .post-card-wide {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .post-card-wide .post-excerpt-new { max-width: 360px; }
+
+  .insight-strip {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    margin-top: 1px;
+    border: 1px solid var(--border);
+    border-top: none;
+  }
+
+  .insight-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+  }
+
+  .insight-row:nth-child(even) { border-right: none; }
+  .insight-row:hover { background: var(--bg3); }
+
+  .insight-idx { font-size: 22px; font-weight: 300; color: var(--amber-dim); min-width: 32px; letter-spacing: -0.02em; }
+  .insight-title { font-size: 14px; font-weight: 500; color: var(--text-bright); line-height: 1.5; flex: 1; }
+  .insight-badge { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; flex-shrink: 0; }
+
+  .newsletter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 1px;
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 1.5rem 2rem;
+    background: var(--bg3);
+  }
+
+  .newsletter-label { font-size: 12px; color: var(--text-dim); letter-spacing: 0.05em; }
+  .newsletter-label strong { color: var(--text-bright); font-weight: 500; }
+
+  .newsletter-form { display: flex; gap: 0; flex-shrink: 0; }
+
+  .newsletter-form input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-right: none;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 14px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+
+  .newsletter-form input:focus { border-color: var(--amber); }
+  .newsletter-form input::placeholder { color: var(--text-dim); }
+
+  .newsletter-form button {
+    background: var(--amber);
+    color: var(--bg);
+    border: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .newsletter-form button:hover { opacity: 0.85; }
+
+  /* ── FOOTER REVAMP ── */
+  footer { padding: 0 !important; border-top: 1px solid var(--border); display: block !important; }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .footer-col { padding: 3rem 2.5rem; border-right: 1px solid var(--border); }
+  .footer-col:last-child { border-right: none; }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-bright);
+  }
+
+  .footer-brand-mark {
+    width: 24px; height: 24px;
+    border: 1px solid var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .footer-tagline { font-family: var(--sans); font-size: 12px; color: var(--text-dim); line-height: 1.9; margin-bottom: 1.5rem; max-width: 280px; }
+
+  .footer-kw-cluster { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 1rem; }
+
+  .footer-kw {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 7px;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .footer-kw:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+  .footer-col-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber-dim); margin-bottom: 1.25rem; }
+
+  .footer-col-links { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .footer-col-links a { font-size: 12px; color: var(--text-dim); text-decoration: none; transition: color 0.2s; line-height: 1; }
+  .footer-col-links a:hover { color: var(--text-bright); }
+
+  .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2.5rem; gap: 2rem; }
+  .footer-copy { font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em; }
+  .footer-bottom-links { display: flex; gap: 2rem; list-style: none; }
+  .footer-bottom-links a { font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.08em; transition: color 0.2s; }
+  .footer-bottom-links a:hover { color: var(--amber); }
+
+  @media (max-width: 700px) {
+    .posts-grid-new { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-col { border-right: none; }
+    .newsletter-bar { flex-direction: column; align-items: flex-start; }
+    .blog-filter-bar { flex-wrap: wrap; width: 100%; }
+  }
+
+
+  /* ── TRUTH LEDGER ── */
+  .ledger-wrap { border: 1px solid var(--border); }
+
+  .ledger-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .ledger-stats { display: flex; gap: 2rem; }
+
+  .ledger-stat { text-align: center; }
+  .ledger-stat span { display: block; font-size: 18px; font-weight: 500; color: var(--text-bright); }
+  .ledger-stat small { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+
+  .ledger-filter-row { display: flex; gap: 0; border: 1px solid var(--border); }
+
+  .lf-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .lf-btn:last-child { border-right: none; }
+  .lf-btn:hover { background: var(--bg2); color: var(--amber); }
+  .lf-btn.active { background: var(--amber); color: var(--bg); }
+
+  .ledger-entries { background: var(--bg); }
+
+  .ledger-entry {
+    display: grid;
+    grid-template-columns: 120px 80px 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    transition: background 0.15s;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .ledger-entry:hover { background: var(--bg2); }
+  .ledger-entry:last-child { border-bottom: none; }
+
+  .le-hash { color: var(--amber-dim); font-size: 11px; font-family: var(--mono); }
+  .le-type { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--border); padding: 2px 7px; color: var(--text-dim); white-space: nowrap; }
+  .le-type-decision { color: var(--amber); border-color: var(--amber-dim); }
+  .le-type-tool { color: #6ea8e8; border-color: rgba(110,168,232,0.3); }
+  .le-type-consensus { color: var(--green); border-color: var(--green-dim); }
+  .le-type-mandate { color: #c07ee8; border-color: rgba(192,126,232,0.3); }
+  .le-type-payment { color: var(--amber); border-color: var(--amber-dim); }
+
+  .le-action { color: var(--text-bright); font-family: var(--sans); font-size: 13px; line-height: 1.5; }
+  .le-agent { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+  .le-meta { font-size: 10px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+  .le-carbon { font-size: 10px; color: var(--green); text-align: right; white-space: nowrap; }
+
+  .ledger-footer-bar {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    gap: 1rem;
+  }
+
+  /* ── ROADMAP ── */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+  }
+
+  .roadmap-phase {
+    padding: 2rem;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .roadmap-phase:last-child { border-right: none; }
+
+  .active-phase {
+    background: var(--bg2);
+    border-top: 2px solid var(--amber);
+  }
+
+  .phase-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+
+  .phase-tag {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+  }
+
+  .active-tag { color: var(--amber); border-color: var(--amber-dim); background: rgba(232,160,32,0.08); }
+
+  .phase-num { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+  .phase-title { font-size: 14px; font-weight: 500; color: var(--text-bright); margin-bottom: 0.25rem; letter-spacing: -0.01em; }
+
+  .phase-period { font-size: 11px; color: var(--text-dim); margin-bottom: 1.25rem; }
+
+  .phase-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
+  }
+
+  .phase-items li {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    padding-left: 1rem;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .phase-items li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+    font-size: 10px;
+  }
+
+  .active-phase .phase-items li::before { color: var(--amber-dim); }
+
+  .phase-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  .pm-item { font-size: 11px; color: var(--text-dim); }
+  .pm-item span { color: var(--text-bright); font-weight: 500; margin-right: 4px; }
+  .pm-item .t-green { color: var(--green); }
+
+  /* ── TECH STACK ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+  }
+
+  .stack-group {
+    padding: 2rem;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .stack-group:last-child { border-right: none; }
+  .stack-group:hover { background: var(--bg2); }
+
+  .sg-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    margin-bottom: 1.25rem;
+  }
+
+  .sg-items { display: flex; flex-direction: column; gap: 0; }
+
+  .sg-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sg-item:last-child { border-bottom: none; }
+
+  .sg-name { font-size: 13px; font-weight: 500; color: var(--text-bright); }
+  .sg-role { font-family: var(--sans); font-size: 12px; color: var(--text); line-height: 1.6; }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    border: 1px solid var(--border);
+  }
+
+  .pricing-card {
+    padding: 2.5rem;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .pricing-card:last-child { border-right: none; }
+
+  .pricing-featured {
+    background: var(--bg2);
+    border-top: 2px solid var(--amber);
+  }
+
+  .pr-badge {
+    position: absolute;
+    top: 0; right: 2rem;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--amber);
+    color: var(--bg);
+    padding: 3px 10px;
+  }
+
+  .pr-tier { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.75rem; }
+
+  .pr-price {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+    line-height: 1;
+  }
+
+  .pr-price span { font-size: 12px; color: var(--text-dim); font-weight: 400; }
+
+  .pr-desc { font-family: var(--sans); font-size: 14px; color: var(--text); line-height: 1.8; margin-bottom: 1.5rem; }
+
+  .pr-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    margin-bottom: 2rem;
+  }
+
+  .pr-features li {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    padding-left: 1.25rem;
+    position: relative;
+  }
+
+  .pr-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--green);
+    font-size: 11px;
+  }
+
+  .pr-btn {
+    display: block;
+    text-align: center;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: opacity 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+
+  .pr-btn-primary { background: var(--amber); color: var(--bg); border: none; }
+  .pr-btn-primary:hover { opacity: 0.85; }
+  .pr-btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .pr-btn-ghost:hover { border-color: var(--text); color: var(--text-bright); }
+
+  .open-source-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 3rem;
+    padding: 1.5rem 2rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+  }
+
+  .oss-badges { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+
+  .oss-badge {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  /* ── PROTOCOL STATUS ── */
+  .proto-status-grid { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); }
+
+  .ps-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .ps-row:last-child { border-bottom: none; }
+
+  .ps-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .ps-online { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .ps-beta { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+  .ps-alpha { background: #6ea8e8; box-shadow: 0 0 4px #6ea8e8; }
+
+  .ps-name { color: var(--text-bright); min-width: 80px; }
+  .ps-lat { color: var(--green); font-size: 11px; min-width: 50px; }
+  .ps-label { color: var(--text-dim); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-left: auto; }
+
+  /* ── HAMBURGER NAV ── */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--text);
+    transition: transform 0.25s, opacity 0.25s;
+    transform-origin: center;
+  }
+
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  .nav-mobile-menu {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0; right: 0;
+    background: rgba(8,10,8,0.97);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    z-index: 99;
+    padding: 1.5rem 1.5rem 2rem;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav-mobile-menu.open { display: flex; }
+
+  .nav-mobile-menu a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+
+  .nav-mobile-menu a:last-child { border-bottom: none; }
+  .nav-mobile-menu a:hover { color: var(--amber); }
+
+  .nav-mobile-cta {
+    margin-top: 1.5rem;
+    padding: 14px 0;
+    background: var(--amber);
+    color: var(--bg) !important;
+    text-align: center;
+    font-weight: 500;
+    border-bottom: none !important;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── RESPONSIVE: TABLET (max 1100px) ── */
+  @media (max-width: 1100px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { gap: 1.5rem; }
+    .roadmap-grid { grid-template-columns: repeat(2,1fr); }
+    .stack-grid { grid-template-columns: repeat(2,1fr); }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .pricing-card { border-right: none; border-bottom: 1px solid var(--border); }
+    .ledger-bar { flex-direction: column; align-items: flex-start; }
+    .open-source-bar { flex-direction: column; gap: 1rem; }
+    .oss-badges { flex-direction: row; flex-wrap: wrap; }
+    .post-featured { grid-template-columns: 1fr; }
+    .post-featured-visual { display: none; }
+    .posts-grid-new { grid-template-columns: 1fr 1fr; }
+    .post-card-wide { grid-column: span 1; grid-template-columns: 1fr !important; }
+    .insight-strip { grid-template-columns: 1fr; }
+    .insight-row { border-right: none; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .arch-crosscut { grid-template-columns: 1fr; }
+    .arch-layer { grid-template-columns: 1fr; gap: 0.75rem; }
+    .wf-body { grid-template-columns: 1fr auto; }
+    .wf-action { grid-column: 1 / 2; }
+    .wf-proto { grid-column: 2; grid-row: 1; }
+    .wf-actor { grid-column: 1; }
+    .wf-summary { grid-template-columns: repeat(2,1fr); }
+    .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  /* ── RESPONSIVE: MOBILE NAV (max 900px) ── */
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+    .hero-terminal { display: none; }
+    section { padding: 4rem 1.5rem; }
+    .hero { padding: 6rem 1.5rem 3rem; }
+    .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
+    .principles-grid { grid-template-columns: repeat(2,1fr); }
+    .blog-filter-bar { flex-wrap: wrap; }
+    .filter-btn { border-right: 1px solid var(--border); }
+    .newsletter-bar { flex-direction: column; align-items: flex-start; }
+    .newsletter-form input { width: 160px; }
+  }
+
+  /* ── RESPONSIVE: MOBILE SMALL (max 640px) ── */
+  @media (max-width: 640px) {
+    .hero-h1 { font-size: 2.4rem; }
+    .hero-stats { grid-template-columns: 1fr 1fr; display: grid; gap: 1.5rem; }
+    .roadmap-grid { grid-template-columns: 1fr; }
+    .stack-grid { grid-template-columns: 1fr; }
+    .ledger-entry { grid-template-columns: 80px 1fr auto; }
+    .le-hash { display: none; }
+    .le-carbon { display: none; }
+    .posts-grid-new { grid-template-columns: 1fr; }
+    .post-card-wide { grid-column: span 1; }
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-col { border-right: none; padding: 2rem 1.5rem; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; padding: 1.25rem 1.5rem; }
+    .footer-bottom-links { flex-wrap: wrap; gap: 1rem; }
+    .wf-step { grid-template-columns: 40px 1fr; }
+    .wf-body { grid-template-columns: 1fr; gap: 0.5rem; }
+    .wf-proto { grid-column: 1; grid-row: auto; align-self: flex-start; }
+    .comp-table th:nth-child(n+3),
+    .comp-table td:nth-child(n+3) { display: none; }
+    .section-h2 { font-size: 1.7rem; }
+    .caps-grid { grid-template-columns: 1fr; }
+    .team-grid { grid-template-columns: 1fr; }
+    .hero-actions { flex-direction: column; gap: 0.75rem; }
+    .btn-primary, .btn-ghost { text-align: center; }
+    .principles-grid { grid-template-columns: 1fr; }
+    .arch-crosscut { grid-template-columns: 1fr; }
+    .wf-summary { grid-template-columns: repeat(2,1fr); }
+    .ledger-filter-row { flex-wrap: wrap; }
+    .lf-btn { border-bottom: 1px solid var(--border); }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .newsletter-form { flex-direction: column; }
+    .newsletter-form input { width: 100%; border-right: 1px solid var(--border); border-bottom: none; }
+    .newsletter-form button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">ARM</div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#comparison">Why ARM</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#blog">Insights</a></li>
+    <li><a href="#contact" class="nav-cta">Request Demo</a></li>
+  </ul>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<!-- MOBILE MENU -->
+<div class="nav-mobile-menu" id="navMobileMenu">
+  <a href="#capabilities" onclick="closeMenu()">Capabilities</a>
+  <a href="#architecture" onclick="closeMenu()">Architecture</a>
+  <a href="#comparison" onclick="closeMenu()">Why ARM</a>
+  <a href="#roadmap" onclick="closeMenu()">Roadmap</a>
+  <a href="#pricing" onclick="closeMenu()">Pricing</a>
+  <a href="#blog" onclick="closeMenu()">Insights</a>
+  <a href="#contact" class="nav-mobile-cta" onclick="closeMenu()">Request Demo</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Autonomous Infrastructure</div>
+  <h1 class="hero-h1">
+    Architecture<br>
+    for the <em>agentic</em><br>
+    era.
+  </h1>
+  <p class="hero-sub">
+    ARM Agency deploys, monitors, and optimizes autonomous systems at enterprise scale — building the infrastructure that lets AI operate reliably in production.
+  </p>
+  <div class="hero-actions">
+    <a href="#contact" class="btn-primary">Request Demo</a>
+    <a href="#capabilities" class="btn-ghost">Explore Capabilities</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-val">200<span>+</span></div>
+      <div class="stat-label">Enterprise customers</div>
+    </div>
+    <div>
+      <div class="stat-val">50<span>K+</span></div>
+      <div class="stat-label">Agents deployed</div>
+    </div>
+    <div>
+      <div class="stat-val">99<span>.99%</span></div>
+      <div class="stat-label">Uptime SLA</div>
+    </div>
+    <div>
+      <div class="stat-val">8<span>ms</span></div>
+      <div class="stat-label">Median latency</div>
+    </div>
+  </div>
+
+  <!-- Terminal -->
+  <div class="hero-terminal">
+    <div class="terminal-bar">arm-agent-cli v2.4.1 — connected</div>
+    <div class="terminal-body">
+      <div><span class="t-dim">$</span> <span class="t-green">arm</span> status --cluster prod-01</div>
+      <div class="t-dim">Checking agent health...</div>
+      <div><span class="t-amber">✓</span> <span class="t-bright">12,440</span> <span class="t-dim">agents active</span></div>
+      <div><span class="t-amber">✓</span> <span class="t-bright">BFT consensus</span> <span class="t-dim">maintained</span></div>
+      <div><span class="t-amber">✓</span> <span class="t-bright">Mandate chains</span> <span class="t-dim">verified</span></div>
+      <div class="t-dim">──────────────────────────</div>
+      <div><span class="t-dim">Uptime:</span> <span class="t-green">99.99%</span> <span class="t-dim">/ 30d</span></div>
+      <div><span class="t-dim">Throughput:</span> <span class="t-bright">2.4M</span> <span class="t-dim">ops/sec</span></div>
+      <div><span class="t-dim">Anomalies:</span> <span class="t-green">0</span></div>
+      <div><span class="t-dim">$</span> <span class="cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNAL STRIP -->
+<div class="signal-strip">
+  <div class="signal-track">
+    <span class="signal-item"><span>//</span> AI-Native Architecture</span>
+    <span class="signal-item"><span>//</span> Byzantine Fault Tolerance</span>
+    <span class="signal-item"><span>//</span> Agentic Workflow Orchestration</span>
+    <span class="signal-item"><span>//</span> Real-Time Attribution</span>
+    <span class="signal-item"><span>//</span> Differential Privacy</span>
+    <span class="signal-item"><span>//</span> Carbon-Aware Scheduling</span>
+    <span class="signal-item"><span>//</span> Mandate Chain Verification</span>
+    <span class="signal-item"><span>//</span> AI-Native Architecture</span>
+    <span class="signal-item"><span>//</span> Byzantine Fault Tolerance</span>
+    <span class="signal-item"><span>//</span> Agentic Workflow Orchestration</span>
+    <span class="signal-item"><span>//</span> Real-Time Attribution</span>
+    <span class="signal-item"><span>//</span> Differential Privacy</span>
+    <span class="signal-item"><span>//</span> Carbon-Aware Scheduling</span>
+    <span class="signal-item"><span>//</span> Mandate Chain Verification</span>
+  </div>
+</div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-tag">Core capabilities</div>
+  <h2 class="section-h2 reveal">What ARM Agency builds and operates</h2>
+  <p class="section-lead reveal">Four integrated disciplines that give autonomous systems the infrastructure to operate at enterprise scale without supervision failures.</p>
+  <div class="caps-grid reveal">
+    <div class="cap-card">
+      <div class="cap-num">01 ─ Architecture</div>
+      <div class="cap-title">AI-Native Signal Infrastructure</div>
+      <div class="cap-desc">Machine-readable systems architected from first principles — structured data, semantic layers, and knowledge graphs that AI agents can query, trust, and act on without ambiguity.</div>
+      <div class="cap-tag">Signal Layer</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-num">02 ─ Orchestration</div>
+      <div class="cap-title">Agentic Workflow Syndication</div>
+      <div class="cap-desc">End-to-end orchestration of autonomous workflows across distributed systems. Agents coordinate, delegate, and self-correct under mandate constraints with full audit trails.</div>
+      <div class="cap-tag">Workflow Layer</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-num">03 ─ Security</div>
+      <div class="cap-title">Enterprise-Grade Fault Tolerance</div>
+      <div class="cap-desc">Multi-layer security with Byzantine Fault Tolerance and mandate chain verification. Systems maintain consensus and recover from adversarial conditions without human escalation.</div>
+      <div class="cap-tag">Security Layer</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-num">04 ─ Visibility</div>
+      <div class="cap-title">Real-Time Attribution & Observability</div>
+      <div class="cap-desc">Live visibility into agent decisions, resource usage, and outcome attribution. Differential privacy protects sensitive data while maintaining full operational transparency.</div>
+      <div class="cap-tag">Observability Layer</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="section-tag">Deployment process</div>
+  <h2 class="section-h2 reveal">From contract to production in 30 days</h2>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">Step 01</div>
+      <div class="step-content">
+        <div class="step-title">Signal audit & architecture review</div>
+        <div class="step-desc">We map your existing data infrastructure, identify gaps in machine-readability, and define the knowledge graph your agents will operate against.</div>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">Step 02</div>
+      <div class="step-content">
+        <div class="step-title">Mandate chain design</div>
+        <div class="step-desc">Your organization's authority structure is encoded into verifiable mandate chains — defining what agents can decide autonomously vs. what requires escalation.</div>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">Step 03</div>
+      <div class="step-content">
+        <div class="step-title">Cluster provisioning & BFT setup</div>
+        <div class="step-desc">Agent clusters are provisioned in your preferred cloud environment. Byzantine Fault Tolerance consensus protocols are initialized and tested under adversarial conditions.</div>
+      </div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">Step 04</div>
+      <div class="step-content">
+        <div class="step-title">Live deployment & attribution wiring</div>
+        <div class="step-desc">Agents go live with real-time attribution enabled from day one. Every decision is logged, queryable, and attributable to a specific agent, mandate, and timestamp.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERSHIP -->
+<section id="leadership">
+  <div class="section-tag">Leadership</div>
+  <h2 class="section-h2 reveal">The team architecting trust in autonomous systems</h2>
+  <div class="team-grid reveal">
+    <div class="team-card">
+      <div class="team-avatar">MN</div>
+      <div class="team-name">Mason Nguyen</div>
+      <div class="team-role">Chief Executive Officer</div>
+      <div class="team-bio">15 years in distributed systems and AI infrastructure. Previously led autonomous systems R&D at a Fortune 100 logistics firm, where he oversaw deployment of the first BFT-compliant agent network in regulated logistics.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">AL</div>
+      <div class="team-name">Avery Lane</div>
+      <div class="team-role">Chief Operating Officer</div>
+      <div class="team-bio">Operations architect specializing in agentic workflow at scale. Designed the mandate-chain verification framework now used across ARM's enterprise client base. Former CTO of an autonomous trading infrastructure firm.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar">JW</div>
+      <div class="team-name">John Williams</div>
+      <div class="team-role">Managing Director, Partnerships</div>
+      <div class="team-bio">Strategic alliances lead with deep relationships across cloud infrastructure, enterprise security, and AI research. Built partnerships that now cover 60% of ARM's enterprise deployment environments.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" style="background:var(--bg2);">
+  <div class="section-tag">02 &mdash; Architecture</div>
+  <h2 class="section-h2 reveal">Layered execution fabric</h2>
+  <p class="section-lead reveal">Six orthogonal layers with cross-cutting concerns for economics, sustainability, and auditability. Each layer is independently upgradeable without touching the others.</p>
+
+  <div class="arch-stack reveal" style="margin-top:3rem;">
+
+    <div class="arch-layer" style="border-color:var(--amber);">
+      <div class="arch-label" style="color:var(--amber);">L0 &mdash; Human Intent</div>
+      <div class="arch-chips">
+        <span class="arch-chip">DID Identity</span>
+        <span class="arch-chip">Root Mandate</span>
+        <span class="arch-chip">HITL Escalation</span>
+        <span class="arch-chip">Revocable Sub-Mandates</span>
+      </div>
+    </div>
+
+    <div class="arch-layer">
+      <div class="arch-label">L1 &mdash; Orchestration Kernel</div>
+      <div class="arch-chips">
+        <span class="arch-chip">Temporal Workflows</span>
+        <span class="arch-chip">Task Router</span>
+        <span class="arch-chip">Dead-Man&apos;s Switch</span>
+        <span class="arch-chip">Circuit Breakers</span>
+      </div>
+    </div>
+
+    <div class="arch-layer">
+      <div class="arch-label">L2 &mdash; Safety &amp; Sandbox</div>
+      <div class="arch-chips">
+        <span class="arch-chip">Wasm Sandboxes</span>
+        <span class="arch-chip">BFT Consensus</span>
+        <span class="arch-chip">Hallucination Detection</span>
+        <span class="arch-chip">Mandate Verifier</span>
+      </div>
+    </div>
+
+    <div class="arch-layer">
+      <div class="arch-label">L3 &mdash; Cognitive Swarms</div>
+      <div class="arch-chips">
+        <span class="arch-chip">Agent Discovery</span>
+        <span class="arch-chip">Task Lifecycle</span>
+        <span class="arch-chip">A2A / ACP</span>
+        <span class="arch-chip">Structured Dialogue</span>
+      </div>
+    </div>
+
+    <div class="arch-layer">
+      <div class="arch-label">L4 &mdash; Memory Fabric</div>
+      <div class="arch-chips">
+        <span class="arch-chip">Vector Store</span>
+        <span class="arch-chip">Event Sourcing</span>
+        <span class="arch-chip">Checkpoint Store</span>
+        <span class="arch-chip">Semantic Cache</span>
+      </div>
+    </div>
+
+    <div class="arch-layer" style="border-color:var(--green-dim);">
+      <div class="arch-label" style="color:var(--green);">L5 &mdash; MCP Tools &amp; Actions</div>
+      <div class="arch-chips">
+        <span class="arch-chip">Tool Registry</span>
+        <span class="arch-chip">Context Windows</span>
+        <span class="arch-chip">Resource Providers</span>
+        <span class="arch-chip">Prompt Templates</span>
+      </div>
+    </div>
+
+    <!-- Cross-cutting -->
+    <div class="arch-crosscut reveal">
+      <div class="arch-cc-item">
+        <div class="arch-cc-label" style="color:var(--amber);">Economic Layer (AP2)</div>
+        <div class="arch-cc-pills">
+          <span>Mandate Signing</span><span>Payment Rails</span><span>Tx Ledger</span>
+        </div>
+      </div>
+      <div class="arch-cc-item">
+        <div class="arch-cc-label" style="color:var(--green);">Sustainability Scheduler</div>
+        <div class="arch-cc-pills">
+          <span>Grid Intensity API</span><span>Carbon Budgets</span><span>Green Windows</span>
+        </div>
+      </div>
+      <div class="arch-cc-item">
+        <div class="arch-cc-label">Truth Ledger</div>
+        <div class="arch-cc-pills">
+          <span>Immutable Log</span><span>Decision Traces</span><span>Audit Queries</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINEERING PRINCIPLES -->
+<section id="principles">
+  <div class="section-tag">03 &mdash; Engineering Principles</div>
+  <h2 class="section-h2 reveal">Ten invariants that govern every design decision</h2>
+
+  <div class="principles-grid reveal" style="margin-top:3rem;">
+    <div class="principle-card">
+      <div class="p-num">P1</div>
+      <div class="p-title">Sovereign Agency</div>
+      <div class="p-desc">Agents act within cryptographically bounded mandate scopes. No action without verifiable authorization.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P2</div>
+      <div class="p-title">Protocol-Native</div>
+      <div class="p-desc">MCP, A2A, ACP, and AP2 are first-class citizens. Wire formats are the source of truth — not adapters.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P3</div>
+      <div class="p-title">Durable State</div>
+      <div class="p-desc">Every state transition is checkpointed. Zero-loss recovery from crashes, network partitions, or provider failures.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P4</div>
+      <div class="p-title">Carbon-Aware</div>
+      <div class="p-desc">Computation is scheduled against live grid carbon intensity. Non-urgent tasks defer to green windows automatically.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P5</div>
+      <div class="p-title">Auditability by Design</div>
+      <div class="p-desc">Immutable Truth Ledger records every decision, tool call, and mandate chain. EU AI Act compliant from day one.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P6</div>
+      <div class="p-title">Semantic Sandboxing</div>
+      <div class="p-desc">Each tool executes in a capability-restricted Wasm sandbox. Tools cannot escape their declared permission scope.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P7</div>
+      <div class="p-title">Economic Traceability</div>
+      <div class="p-desc">AP2 mandates create verifiable payment trails. Every transaction is attributable to a human principal.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P8</div>
+      <div class="p-title">Graceful Degradation</div>
+      <div class="p-desc">When AI reasoning fails, the system falls back to deterministic paths. It never hallucinates forward.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P9</div>
+      <div class="p-title">Composable Swarms</div>
+      <div class="p-desc">Agents discover and coordinate via A2A / ACP without central registries. Swarm topology is emergent.</div>
+    </div>
+    <div class="principle-card">
+      <div class="p-num">P10</div>
+      <div class="p-title">Edge-Ready</div>
+      <div class="p-desc">Core kernel compiles to Wasm for edge and IoT deployment. Full system runs on 512MB RAM minimum.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROTOCOL COMPARISON -->
+<section id="comparison" style="background:var(--bg2);">
+  <div class="section-tag">04 &mdash; Why ARM</div>
+  <h2 class="section-h2 reveal">The only protocol-native, resilient, carbon-aware agent infrastructure</h2>
+  <p class="section-lead reveal">Feature-by-feature comparison with leading frameworks. ARM is the only platform with first-class MCP + A2A + ACP + AP2 support, zero-loss resilience, and carbon-aware scheduling built into the kernel.</p>
+
+  <div class="comp-table-wrap reveal" style="margin-top:3rem;overflow-x:auto;">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="col-arm">ARM Agency</th>
+          <th>LangGraph</th>
+          <th>CrewAI</th>
+          <th>AutoGen</th>
+          <th>Semantic Kernel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="comp-group"><td colspan="6">Protocol Support</td></tr>
+        <tr><td>Native MCP support</td><td class="col-arm t-yes">&#10003;</td><td class="t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-partial">&#126;</td></tr>
+        <tr><td>Google A2A protocol</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Agent Commerce (AP2)</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr class="comp-group"><td colspan="6">Resilience</td></tr>
+        <tr><td>Durable execution (stateful)</td><td class="col-arm t-yes">&#10003;</td><td class="t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Dead-Man&apos;s Switch</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Multi-model BFT consensus</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Circuit breakers</td><td class="col-arm t-yes">&#10003;</td><td class="t-partial">&#126;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr class="comp-group"><td colspan="6">Safety &amp; Isolation</td></tr>
+        <tr><td>Wasm sandboxing</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Mandate chain (delegated auth)</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Immutable audit log</td><td class="col-arm t-yes">&#10003;</td><td class="t-partial">&#126;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>HITL escalation</td><td class="col-arm t-yes">&#10003;</td><td class="t-yes">&#10003;</td><td class="t-partial">&#126;</td><td class="t-yes">&#10003;</td><td class="t-no">&#10007;</td></tr>
+        <tr class="comp-group"><td colspan="6">Sustainability</td></tr>
+        <tr><td>Carbon-aware scheduling</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>Per-task energy tracking</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+        <tr><td>EU AI Act compliance</td><td class="col-arm t-yes">&#10003;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td><td class="t-no">&#10007;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="comp-legend reveal" style="margin-top:1rem;">
+    <span class="t-yes">&#10003; Full support</span>
+    <span class="t-partial">&#126; Partial / plugin</span>
+    <span class="t-no">&#10007; Not available</span>
+  </div>
+</section>
+
+<!-- WORKFLOW TRACE -->
+<section id="workflow">
+  <div class="section-tag">05 &mdash; Real-World Workflow</div>
+  <h2 class="section-h2 reveal">Cross-org procurement, end-to-end</h2>
+  <p class="section-lead reveal">A2A discovery &rarr; ACP negotiation &rarr; BFT validation &rarr; HITL approval &rarr; AP2 payment. Every step recorded to the Truth Ledger with Merkle proofs.</p>
+
+  <div class="workflow-trace reveal" style="margin-top:3rem;">
+    <div class="wf-step" data-proto="MANDATE">
+      <div class="wf-idx">01</div>
+      <div class="wf-body">
+        <div class="wf-actor">Alice (Human) &rarr; ProcurementAgent</div>
+        <div class="wf-action">Issue root mandate for Q1 logistics procurement ($50K budget)</div>
+        <div class="wf-proto">MANDATE</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="A2A">
+      <div class="wf-idx">02</div>
+      <div class="wf-body">
+        <div class="wf-actor">ProcurementAgent &rarr; SupplyDiscovery</div>
+        <div class="wf-action">Discover capable logistics vendors via .well-known/agent.json auto-discovery</div>
+        <div class="wf-proto">A2A</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="A2A">
+      <div class="wf-idx">03</div>
+      <div class="wf-body">
+        <div class="wf-actor">SupplyDiscovery &rarr; ProcurementAgent</div>
+        <div class="wf-action">Return 3 qualified vendor agents: GlobalLog, SwiftShip, EcoFreight</div>
+        <div class="wf-proto">A2A</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="ACP">
+      <div class="wf-idx">04</div>
+      <div class="wf-body">
+        <div class="wf-actor">ProcurementAgent &rarr; GlobalLogAgent</div>
+        <div class="wf-action">Send CFP (Call for Proposal) with requirements and constraints</div>
+        <div class="wf-proto">ACP</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="ACP">
+      <div class="wf-idx">05</div>
+      <div class="wf-body">
+        <div class="wf-actor">GlobalLogAgent &rarr; ProcurementAgent</div>
+        <div class="wf-action">Propose: $42,000 for 500 pallets LAX&ndash;JFK, 5-day transit, ISO-14001</div>
+        <div class="wf-proto">ACP</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="BFT">
+      <div class="wf-idx">06</div>
+      <div class="wf-body">
+        <div class="wf-actor">ProcurementAgent &rarr; BFT-Validator</div>
+        <div class="wf-action">3-model BFT consensus on proposal terms and compliance claims</div>
+        <div class="wf-proto wf-bft">BFT</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="BFT">
+      <div class="wf-idx">07</div>
+      <div class="wf-body">
+        <div class="wf-actor">BFT-Validator &rarr; ProcurementAgent</div>
+        <div class="wf-action">Consensus reached: 3/3 models confirm proposal validity and mandate compliance</div>
+        <div class="wf-proto wf-bft">BFT</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="HITL">
+      <div class="wf-idx">08</div>
+      <div class="wf-body">
+        <div class="wf-actor">ProcurementAgent &rarr; Alice (Human)</div>
+        <div class="wf-action">Escalate for human approval: $42K payment exceeds auto-approve threshold ($10K)</div>
+        <div class="wf-proto wf-hitl">HITL</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="MANDATE">
+      <div class="wf-idx">09</div>
+      <div class="wf-body">
+        <div class="wf-actor">Alice (Human) &rarr; ProcurementAgent</div>
+        <div class="wf-action">Approved. Sub-mandate issued for payment execution within AP2 bounds.</div>
+        <div class="wf-proto">MANDATE</div>
+      </div>
+    </div>
+    <div class="wf-step" data-proto="AP2">
+      <div class="wf-idx">10</div>
+      <div class="wf-body">
+        <div class="wf-actor">ProcurementAgent &rarr; GlobalLogAgent</div>
+        <div class="wf-action">Execute AP2 payment intent: $42,000 with mandate chain proof &amp; Truth Ledger record</div>
+        <div class="wf-proto wf-ap2">AP2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf-summary reveal" style="margin-top:2rem;">
+    <div class="wf-stat"><span>5</span><small>Protocols</small></div>
+    <div class="wf-stat"><span>10</span><small>Traced steps</small></div>
+    <div class="wf-stat"><span>3</span><small>Org boundaries</small></div>
+    <div class="wf-stat"><span>100%</span><small>Merkle verified</small></div>
+  </div>
+</section>
+
+<!-- BLOG / INSIGHTS -->
+<section id="blog">
+  <div class="section-tag">06 &mdash; Insights &amp; research</div>
+  <h2 class="section-h2 reveal">Field notes from production deployments</h2>
+  <p class="section-lead reveal">Technical deep-dives, enterprise case studies, and whitepapers from the team building autonomous infrastructure at scale. Updated fortnightly.</p>
+
+  <div class="blog-filter-bar reveal">
+    <button class="filter-btn active" onclick="filterPosts('all', this)">All</button>
+    <button class="filter-btn" onclick="filterPosts('case-study', this)">Case Studies</button>
+    <button class="filter-btn" onclick="filterPosts('technical', this)">Technical</button>
+    <button class="filter-btn" onclick="filterPosts('whitepaper', this)">Whitepapers</button>
+    <button class="filter-btn" onclick="filterPosts('insight', this)">Insights</button>
+  </div>
+
+  <!-- Featured -->
+  <a class="post-featured reveal" href="#blog" data-type="case-study">
+    <div class="post-featured-visual">
+      <svg width="200" height="160" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="80" r="12" stroke="#e8a020" stroke-width="1"/>
+        <circle cx="40" cy="40" r="7" stroke="#3ddc84" stroke-width="1"/>
+        <circle cx="160" cy="40" r="7" stroke="#3ddc84" stroke-width="1"/>
+        <circle cx="40" cy="120" r="7" stroke="#3ddc84" stroke-width="1"/>
+        <circle cx="160" cy="120" r="7" stroke="#3ddc84" stroke-width="1"/>
+        <circle cx="100" cy="20" r="5" stroke="#667066" stroke-width="1"/>
+        <circle cx="100" cy="140" r="5" stroke="#667066" stroke-width="1"/>
+        <line x1="100" y1="68" x2="47" y2="45" stroke="#e8a020" stroke-width="0.5" opacity="0.6"/>
+        <line x1="100" y1="68" x2="153" y2="45" stroke="#e8a020" stroke-width="0.5" opacity="0.6"/>
+        <line x1="100" y1="92" x2="47" y2="115" stroke="#e8a020" stroke-width="0.5" opacity="0.6"/>
+        <line x1="100" y1="92" x2="153" y2="115" stroke="#e8a020" stroke-width="0.5" opacity="0.6"/>
+        <line x1="100" y1="68" x2="100" y2="25" stroke="#667066" stroke-width="0.5" opacity="0.4"/>
+        <line x1="100" y1="92" x2="100" y2="135" stroke="#667066" stroke-width="0.5" opacity="0.4"/>
+        <text x="100" y="84" text-anchor="middle" fill="#e8a020" font-size="8" font-family="monospace">50K</text>
+        <text x="40" y="60" text-anchor="middle" fill="#3ddc84" font-size="6" font-family="monospace">DC-01</text>
+        <text x="160" y="60" text-anchor="middle" fill="#3ddc84" font-size="6" font-family="monospace">DC-02</text>
+        <text x="40" y="140" text-anchor="middle" fill="#3ddc84" font-size="6" font-family="monospace">DC-03</text>
+        <text x="160" y="140" text-anchor="middle" fill="#3ddc84" font-size="6" font-family="monospace">DC-04</text>
+      </svg>
+    </div>
+    <div class="post-featured-body">
+      <div>
+        <div class="featured-cat">Case Study &middot; Feb 20, 2026</div>
+        <div class="featured-title">Autonomous Resource Allocation at Scale: A 50K Agent Case Study</div>
+        <div class="featured-excerpt">A Fortune 500 logistics company deployed 50,000 autonomous agents across four distributed data centers. The result: 40% reduction in compute costs and elimination of manual resource scheduling across 12,000 daily tasks &mdash; zero production incidents in the first 90 days.</div>
+        <div class="featured-tags">
+          <span class="tag-pill">Autonomous agents</span>
+          <span class="tag-pill">Resource optimization</span>
+          <span class="tag-pill">Enterprise AI deployment</span>
+          <span class="tag-pill">Distributed systems</span>
+          <span class="tag-pill">Cost reduction</span>
+        </div>
+      </div>
+      <div class="featured-meta">
+        <span class="featured-meta-author">Mason Nguyen</span>
+        <span>12 min read</span>
+        <span>Fortune 500 &middot; Logistics</span>
+        <span class="read-link">Read &rarr;</span>
+      </div>
+    </div>
+  </a>
+
+  <div class="posts-grid-new" id="postsGrid">
+    <a class="post-card-new" href="#blog" data-type="technical">
+      <div class="post-type type-tech"><span class="type-dot"></span>Technical</div>
+      <div class="post-title-new">Byzantine Fault Tolerance in Autonomous Agent Networks</div>
+      <div class="post-excerpt-new">How production autonomous systems maintain consensus and recover from adversarial node failures without human escalation &mdash; including ARM&apos;s BFT implementation walkthrough in regulated environments.</div>
+      <div class="post-kws"><span class="kw">BFT consensus</span><span class="kw">distributed AI</span><span class="kw">fault tolerance</span><span class="kw">agent reliability</span></div>
+      <div class="post-meta-new"><span>Avery Lane &middot; 12 min</span><span class="post-read-arrow">&rarr;</span></div>
+    </a>
+    <a class="post-card-new" href="#blog" data-type="whitepaper">
+      <div class="post-type type-paper"><span class="type-dot"></span>Whitepaper</div>
+      <div class="post-title-new">The Signal Stack Blueprint: Making Your Brand AI-Readable</div>
+      <div class="post-excerpt-new">Structured data and semantic architecture that transforms scattered brand presence into a high-confidence knowledge graph AI retrieval systems rank as a trusted source.</div>
+      <div class="post-kws"><span class="kw">generative search optimization</span><span class="kw">knowledge graphs</span><span class="kw">structured data</span></div>
+      <div class="post-meta-new"><span>John Williams &middot; 18 min</span><span class="post-read-arrow">&rarr;</span></div>
+    </a>
+    <a class="post-card-new" href="#blog" data-type="technical">
+      <div class="post-type type-tech"><span class="type-dot"></span>Technical</div>
+      <div class="post-title-new">Privacy-Preserving AI: Differential Privacy in Autonomous Agents</div>
+      <div class="post-excerpt-new">How differential privacy techniques protect sensitive enterprise data while maintaining full decision-making effectiveness of autonomous agents at production scale.</div>
+      <div class="post-kws"><span class="kw">differential privacy</span><span class="kw">data protection</span><span class="kw">enterprise security</span></div>
+      <div class="post-meta-new"><span>Avery Lane &middot; 17 min</span><span class="post-read-arrow">&rarr;</span></div>
+    </a>
+    <a class="post-card-new post-card-wide" href="#blog" data-type="case-study" style="display:grid;grid-template-columns:1fr 1fr;padding:0;">
+      <div style="padding:2rem;border-right:1px solid var(--border);">
+        <div class="post-type type-case"><span class="type-dot"></span>Case Study</div>
+        <div class="post-title-new" style="font-size:15px;">Real-Time Attribution in Autonomous Systems: Challenges and Solutions</div>
+        <div class="post-excerpt-new">When 12,000 agents make decisions simultaneously, attribution is non-trivial. This documents ARM&apos;s trace logging, mandate chain auditing, and live dashboards that surface accountability without latency.</div>
+      </div>
+      <div style="padding:2rem;display:flex;flex-direction:column;justify-content:space-between;">
+        <div class="post-kws"><span class="kw">real-time attribution</span><span class="kw">agent observability</span><span class="kw">audit trails</span><span class="kw">mandate chains</span></div>
+        <div class="post-meta-new" style="margin-top:auto;"><span>Mason Nguyen &middot; 13 min</span><span class="post-read-arrow">&rarr;</span></div>
+      </div>
+    </a>
+    <a class="post-card-new" href="#blog" data-type="insight">
+      <div class="post-type type-insight"><span class="type-dot"></span>Insight</div>
+      <div class="post-title-new">Carbon-Aware Scheduling in Autonomous Systems</div>
+      <div class="post-excerpt-new">How autonomous resource management shifts workloads toward low-carbon grid windows &mdash; reducing enterprise carbon footprint by up to 28% without sacrificing throughput or SLA compliance.</div>
+      <div class="post-kws"><span class="kw">carbon-aware AI</span><span class="kw">green computing</span><span class="kw">sustainable infrastructure</span></div>
+      <div class="post-meta-new"><span>Mason Nguyen &middot; 8 min</span><span class="post-read-arrow">&rarr;</span></div>
+    </a>
+  </div>
+
+  <div class="insight-strip reveal">
+    <a class="insight-row" href="#blog" data-type="technical">
+      <span class="insight-idx">06</span>
+      <span class="insight-title">From Monolith to Mesh: Migrating Legacy Systems to Agentic Architecture</span>
+      <span class="insight-badge">Technical &middot; 14 min</span>
+    </a>
+    <a class="insight-row" href="#blog" data-type="whitepaper">
+      <span class="insight-idx">07</span>
+      <span class="insight-title">Digital Twins: The Future of Resource Optimization in Distributed Environments</span>
+      <span class="insight-badge">Whitepaper &middot; 10 min</span>
+    </a>
+    <a class="insight-row" href="#blog" data-type="technical">
+      <span class="insight-idx">08</span>
+      <span class="insight-title">Mandate Chain Verification: Encoding Human Authority into Autonomous Systems</span>
+      <span class="insight-badge">Technical &middot; 9 min</span>
+    </a>
+    <a class="insight-row" href="#blog" data-type="insight">
+      <span class="insight-idx">09</span>
+      <span class="insight-title">The Agentic Enterprise: How Fortune 1000 Teams Are Restructuring for AI-Native Operations</span>
+      <span class="insight-badge">Insight &middot; 11 min</span>
+    </a>
+  </div>
+
+  <div class="newsletter-bar reveal">
+    <div class="newsletter-label"><strong>Stay current.</strong> New research and case studies delivered fortnightly &mdash; no noise, no marketing.</div>
+    <form class="newsletter-form" onsubmit="subNewsletter(event)">
+      <input type="email" placeholder="your@company.com" id="nlEmail">
+      <button type="submit">Subscribe &rarr;</button>
+    </form>
+  </div>
+</section>
+
+<!-- TRUTH LEDGER -->
+<section id="ledger" style="background:var(--bg2);">
+  <div class="section-tag">07 &mdash; Truth Ledger</div>
+  <h2 class="section-h2 reveal">Immutable audit trail for every agent decision</h2>
+  <p class="section-lead reveal">Every decision, tool call, consensus vote, and mandate invocation is logged with Merkle proofs. Queryable in &lt;1s. EU AI Act compliant.</p>
+
+  <div class="ledger-wrap reveal" style="margin-top:3rem;">
+    <div class="ledger-bar">
+      <div class="ledger-stats">
+        <div class="ledger-stat"><span id="entryCount">0</span><small>Entries</small></div>
+        <div class="ledger-stat"><span id="verifiedCount" style="color:var(--green)">0/0</span><small>Verified</small></div>
+        <div class="ledger-stat"><span id="carbonTotal" style="color:var(--amber)">0.000</span><small>gCO2</small></div>
+        <div class="ledger-stat"><span style="color:var(--green)">100%</span><small>Chain Integrity</small></div>
+      </div>
+      <div class="ledger-filter-row">
+        <button class="lf-btn active" onclick="ledgerFilter('all',this)">All</button>
+        <button class="lf-btn" onclick="ledgerFilter('Decision',this)">Decisions</button>
+        <button class="lf-btn" onclick="ledgerFilter('Tool Call',this)">Tool Calls</button>
+        <button class="lf-btn" onclick="ledgerFilter('Consensus',this)">Consensus</button>
+        <button class="lf-btn" onclick="ledgerFilter('Mandate',this)">Mandates</button>
+        <button class="lf-btn" onclick="ledgerFilter('Payment',this)">Payments</button>
+      </div>
+    </div>
+    <div class="ledger-entries" id="ledgerEntries"></div>
+    <div class="ledger-footer-bar">
+      <span style="color:var(--text-dim);font-size:11px;">END-TO-END WORKFLOW TRACE &mdash; mandate: procurement-q1 &mdash; 4 agents &mdash; Merkle chain verified</span>
+      <button class="lf-btn" onclick="addLedgerEntry()" style="margin-left:auto;">+ Simulate entry</button>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-tag">08 &mdash; Roadmap</div>
+  <h2 class="section-h2 reveal">Four-phase delivery plan</h2>
+  <p class="section-lead reveal">From MVP kernel to ecosystem marketplace. Each phase ships independently — no big-bang releases.</p>
+
+  <div class="roadmap-grid reveal" style="margin-top:3rem;">
+    <div class="roadmap-phase active-phase">
+      <div class="phase-header">
+        <div class="phase-tag active-tag">Active</div>
+        <div class="phase-num">Phase 1</div>
+      </div>
+      <div class="phase-title">Resilient Kernel + MCP</div>
+      <div class="phase-period">Months 0&ndash;6</div>
+      <ul class="phase-items">
+        <li>Temporal-based durable execution kernel in Rust</li>
+        <li>Native MCP server/client with tool registry</li>
+        <li>Wasm sandbox runtime (Wasmtime integration)</li>
+        <li>Dead-Man&apos;s Switch + circuit breaker patterns</li>
+        <li>Truth Ledger v1 (append-only FoundationDB)</li>
+        <li>OpenTelemetry instrumentation baseline</li>
+      </ul>
+      <div class="phase-metrics">
+        <div class="pm-item"><span class="t-green">99.99%</span> task recovery</div>
+        <div class="pm-item"><span class="t-green">&lt;50ms</span> tool dispatch</div>
+        <div class="pm-item"><span class="t-green">0</span> sandbox escapes</div>
+      </div>
+    </div>
+
+    <div class="roadmap-phase">
+      <div class="phase-header">
+        <div class="phase-tag">Q3 2026</div>
+        <div class="phase-num">Phase 2</div>
+      </div>
+      <div class="phase-title">A2A/ACP + AP2 Protocols</div>
+      <div class="phase-period">Months 6&ndash;12</div>
+      <ul class="phase-items">
+        <li>A2A agent discovery (.well-known/agent.json)</li>
+        <li>Full A2A task lifecycle management</li>
+        <li>ACP performative engine (request/propose/inform)</li>
+        <li>AP2 mandate signing + payment intents</li>
+        <li>BFT 3-model consensus module</li>
+        <li>Cross-org task integration tests</li>
+      </ul>
+      <div class="phase-metrics">
+        <div class="pm-item"><span>&lt;200ms</span> cross-org handshake</div>
+        <div class="pm-item"><span>First</span> AP2 transaction</div>
+        <div class="pm-item"><span>100%</span> mandate traceability</div>
+      </div>
+    </div>
+
+    <div class="roadmap-phase">
+      <div class="phase-header">
+        <div class="phase-tag">Q1 2027</div>
+        <div class="phase-num">Phase 3</div>
+      </div>
+      <div class="phase-title">Carbon Scheduler + Edge</div>
+      <div class="phase-period">Months 12&ndash;18</div>
+      <ul class="phase-items">
+        <li>WattTime / Electricity Maps integration</li>
+        <li>Carbon-budget-aware task scheduler</li>
+        <li>Wasm kernel compilation for edge devices</li>
+        <li>Edge-cloud hybrid orchestration</li>
+        <li>Kepler per-pod energy measurement</li>
+        <li>EU AI Act audit report generation</li>
+      </ul>
+      <div class="phase-metrics">
+        <div class="pm-item"><span>30%</span> carbon reduction</div>
+        <div class="pm-item"><span>512MB</span> edge footprint</div>
+        <div class="pm-item"><span>Full</span> EU AI Act</div>
+      </div>
+    </div>
+
+    <div class="roadmap-phase">
+      <div class="phase-header">
+        <div class="phase-tag">Q3 2027</div>
+        <div class="phase-num">Phase 4</div>
+      </div>
+      <div class="phase-title">Ecosystem &amp; Marketplace</div>
+      <div class="phase-period">Months 18&ndash;24</div>
+      <ul class="phase-items">
+        <li>Plugin marketplace for Wasm extensions</li>
+        <li>Agent reputation and trust scoring</li>
+        <li>Multi-tenant SaaS deployment option</li>
+        <li>Robotics / IoT agent bridge protocols</li>
+        <li>Community-contributed tool registry</li>
+        <li>Open-source core release (Apache 2.0)</li>
+      </ul>
+      <div class="phase-metrics">
+        <div class="pm-item"><span>100+</span> community plugins</div>
+        <div class="pm-item"><span>10+</span> enterprise deployments</div>
+        <div class="pm-item"><span>1000+</span> registered agents</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack" style="background:var(--bg2);">
+  <div class="section-tag">09 &mdash; Tech Stack</div>
+  <h2 class="section-h2 reveal">Production-grade toolchain</h2>
+  <p class="section-lead reveal">Every component chosen for safety, performance, and protocol compliance. No NIH — best-in-class tools at each layer.</p>
+
+  <div class="stack-grid reveal" style="margin-top:3rem;">
+    <div class="stack-group">
+      <div class="sg-label">Core Runtime</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">Rust</span><span class="sg-role">Kernel, orchestrator, protocol implementations</span></div>
+        <div class="sg-item"><span class="sg-name">Wasmtime</span><span class="sg-role">Tool sandboxing, edge deployment, plugin runtime</span></div>
+        <div class="sg-item"><span class="sg-name">Mojo</span><span class="sg-role">High-performance inference pipelines, numeric workloads</span></div>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="sg-label">Orchestration</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">Temporal.io</span><span class="sg-role">Durable workflow execution, checkpointing, replay</span></div>
+        <div class="sg-item"><span class="sg-name">NATS</span><span class="sg-role">Inter-agent messaging, event streaming</span></div>
+        <div class="sg-item"><span class="sg-name">gRPC / tonic</span><span class="sg-role">High-performance RPC for internal service mesh</span></div>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="sg-label">Storage &amp; Memory</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">SurrealDB</span><span class="sg-role">Multi-model store (graph + document + KV) for agent state</span></div>
+        <div class="sg-item"><span class="sg-name">Pinecone</span><span class="sg-role">Vector embeddings for semantic memory, RAG retrieval</span></div>
+        <div class="sg-item"><span class="sg-name">FoundationDB</span><span class="sg-role">Ordered KV for Truth Ledger, Merkle-based audit log</span></div>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="sg-label">Protocols</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">mcp-rs</span><span class="sg-role">Rust MCP client/server (Anthropic spec)</span></div>
+        <div class="sg-item"><span class="sg-name">a2a-sdk</span><span class="sg-role">A2A task lifecycle, agent discovery, AgentCard</span></div>
+        <div class="sg-item"><span class="sg-name">acp-core</span><span class="sg-role">ACP performatives, dialogue management</span></div>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="sg-label">Observability</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">OpenTelemetry</span><span class="sg-role">Distributed tracing, metrics, spans across agent swarms</span></div>
+        <div class="sg-item"><span class="sg-name">Prometheus</span><span class="sg-role">Metrics collection, alerting, SLA monitoring</span></div>
+        <div class="sg-item"><span class="sg-name">Grafana</span><span class="sg-role">Dashboards, Truth Ledger visualization, carbon tracking</span></div>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="sg-label">Sustainability</div>
+      <div class="sg-items">
+        <div class="sg-item"><span class="sg-name">WattTime API</span><span class="sg-role">Real-time grid carbon intensity data</span></div>
+        <div class="sg-item"><span class="sg-name">Electricity Maps</span><span class="sg-role">Fallback carbon intensity provider, regional data</span></div>
+        <div class="sg-item"><span class="sg-name">Kepler (k8s)</span><span class="sg-role">Per-pod energy consumption measurement</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-tag">10 &mdash; Pricing</div>
+  <h2 class="section-h2 reveal">Scale with your agent fleet</h2>
+  <p class="section-lead reveal">Start free, grow to enterprise. No lock-in &mdash; the core runtime is Apache 2.0. Pay for managed infrastructure and compliance tooling, not for the protocol itself.</p>
+
+  <div class="pricing-grid reveal" style="margin-top:3rem;">
+    <div class="pricing-card">
+      <div class="pr-tier">Free</div>
+      <div class="pr-price">$0<span>/mo</span></div>
+      <div class="pr-desc">For developers and small teams exploring agentic infrastructure.</div>
+      <ul class="pr-features">
+        <li>5 concurrent agents</li>
+        <li>1,000 tasks / month</li>
+        <li>MCP + A2A protocol support</li>
+        <li>Truth Ledger (30-day retention)</li>
+        <li>Community support</li>
+      </ul>
+      <a href="#contact" class="pr-btn pr-btn-ghost">Get started free</a>
+    </div>
+
+    <div class="pricing-card pricing-featured">
+      <div class="pr-badge">Most popular</div>
+      <div class="pr-tier">Pro</div>
+      <div class="pr-price">$0.002<span>/task + $5/agent/mo</span></div>
+      <div class="pr-desc">For teams running agents in production with full protocol suite.</div>
+      <ul class="pr-features">
+        <li>Unlimited agents</li>
+        <li>Full MCP / A2A / ACP / AP2</li>
+        <li>BFT consensus module</li>
+        <li>Carbon-aware scheduling</li>
+        <li>Truth Ledger (1-year retention)</li>
+        <li>Wasm sandboxing</li>
+        <li>Priority email support</li>
+      </ul>
+      <a href="#contact" class="pr-btn pr-btn-primary">Start Pro trial</a>
+    </div>
+
+    <div class="pricing-card">
+      <div class="pr-tier">Enterprise</div>
+      <div class="pr-price">Custom</div>
+      <div class="pr-desc">For regulated industries, governments, and large-scale deployments.</div>
+      <ul class="pr-features">
+        <li>Self-hosted or air-gapped</li>
+        <li>Unlimited agents &amp; tasks</li>
+        <li>EU AI Act compliance toolkit</li>
+        <li>Full mandate chain audit</li>
+        <li>SLA: 99.99% uptime</li>
+        <li>24/7 dedicated support</li>
+        <li>Custom integrations</li>
+      </ul>
+      <a href="#contact" class="pr-btn pr-btn-ghost">Talk to sales</a>
+    </div>
+  </div>
+
+  <div class="open-source-bar reveal" style="margin-top:1px;">
+    <div>
+      <div style="font-size:12px;font-weight:500;color:var(--text-bright);margin-bottom:4px;">Open-source core commitment</div>
+      <div style="font-family:var(--sans);font-size:12px;color:var(--text-dim);">The ARISE kernel, all protocol adapters (MCP/A2A/ACP/AP2), Wasm sandbox runtime, and Truth Ledger core are permanently open-source under Apache 2.0. The agent internet must be built on open standards.</div>
+    </div>
+    <div class="oss-badges">
+      <span class="oss-badge">Apache 2.0 &mdash; Core runtime</span>
+      <span class="oss-badge" style="color:var(--amber);border-color:var(--amber-dim);">Source-available &mdash; Enterprise features</span>
+      <span class="oss-badge" style="color:var(--green);border-color:var(--green-dim);">80/20 rev share &mdash; Plugin marketplace</span>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="background:var(--bg2);">
+  <div class="section-tag">11 &mdash; Contact</div>
+  <h2 class="section-h2 reveal">Ready to deploy?</h2>
+  <div class="contact-grid">
+    <div class="contact-info reveal">
+      <p style="font-family:var(--sans);font-size:14px;color:var(--text-dim);line-height:1.9;margin-bottom:2rem;">ARM Agency works with enterprise teams deploying autonomous agents into production. We respond within one business day. A 30-day production pilot is available for qualified teams.</p>
+      <div class="contact-detail">
+        <div class="contact-row"><span class="contact-row-label">Email</span><span class="contact-row-val">ops@arm-agency.com</span></div>
+        <div class="contact-row"><span class="contact-row-label">Response</span><span class="contact-row-val">Within 1 business day</span></div>
+        <div class="contact-row"><span class="contact-row-label">Demo</span><span class="contact-row-val">60-minute live session</span></div>
+        <div class="contact-row"><span class="contact-row-label">Pilot</span><span class="contact-row-val">30-day production pilot</span></div>
+        <div class="contact-row"><span class="contact-row-label">Protocols</span><span class="contact-row-val">MCP &middot; A2A &middot; ACP &middot; AP2</span></div>
+        <div class="contact-row"><span class="contact-row-label">License</span><span class="contact-row-val">Apache 2.0 core &middot; Enterprise available</span></div>
+      </div>
+
+      <!-- Live protocol status -->
+      <div style="margin-top:2rem;">
+        <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber-dim);margin-bottom:1rem;">Live protocol status</div>
+        <div class="proto-status-grid">
+          <div class="ps-row"><span class="ps-dot ps-online"></span><span class="ps-name">MCP v1.0</span><span class="ps-lat">23ms</span><span class="ps-label">Operational</span></div>
+          <div class="ps-row"><span class="ps-dot ps-online"></span><span class="ps-name">A2A v1.0</span><span class="ps-lat">89ms</span><span class="ps-label">Operational</span></div>
+          <div class="ps-row"><span class="ps-dot ps-beta"></span><span class="ps-name">ACP v0.9</span><span class="ps-lat">45ms</span><span class="ps-label">Beta</span></div>
+          <div class="ps-row"><span class="ps-dot ps-alpha"></span><span class="ps-name">AP2 v0.8</span><span class="ps-lat">112ms</span><span class="ps-label">Alpha</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <form class="form" id="contactForm">
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">First name</label><input type="text" placeholder="Ada" required></div>
+          <div class="form-field"><label class="form-label">Last name</label><input type="text" placeholder="Lovelace" required></div>
+        </div>
+        <div class="form-field"><label class="form-label">Work email</label><input type="email" placeholder="ada@company.com" required></div>
+        <div class="form-field"><label class="form-label">Organization</label><input type="text" placeholder="Company name" required></div>
+        <div class="form-field">
+          <label class="form-label">Use case</label>
+          <select>
+            <option value="">Select one...</option>
+            <option>Autonomous workflow orchestration</option>
+            <option>AI-native infrastructure setup</option>
+            <option>Security &amp; fault tolerance audit</option>
+            <option>Observability &amp; attribution wiring</option>
+            <option>Full-stack agentic deployment</option>
+            <option>EU AI Act compliance</option>
+            <option>Carbon-aware scheduling</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Tell us more (optional)</label><textarea rows="4" placeholder="Describe your current infrastructure and what you're trying to achieve..."></textarea></div>
+        <button type="submit" class="btn-submit">Send Request &rarr;</button>
+        <div class="form-confirm" id="formConfirm">&#10003; Message received. We'll be in touch within one business day.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-col">
+      <div class="footer-brand"><div class="footer-brand-mark">ARM</div>ARM Agency</div>
+      <div class="footer-tagline">Enterprise infrastructure for autonomous AI systems. We deploy, monitor, and optimize agentic workloads at scale &mdash; with full observability, security, and mandate-chain accountability.</div>
+      <div class="footer-kw-cluster">
+        <a href="#capabilities" class="footer-kw">autonomous resource management</a>
+        <a href="#architecture" class="footer-kw">agentic AI infrastructure</a>
+        <a href="#capabilities" class="footer-kw">enterprise AI deployment</a>
+        <a href="#architecture" class="footer-kw">AI agent orchestration</a>
+        <a href="#workflow" class="footer-kw">autonomous workflow automation</a>
+        <a href="#architecture" class="footer-kw">distributed agent systems</a>
+        <a href="#blog" class="footer-kw">generative search optimization</a>
+        <a href="#architecture" class="footer-kw">AI-native architecture</a>
+        <a href="#principles" class="footer-kw">Byzantine fault tolerance</a>
+        <a href="#workflow" class="footer-kw">mandate chain verification</a>
+        <a href="#ledger" class="footer-kw">real-time agent attribution</a>
+        <a href="#architecture" class="footer-kw">agentic workflow syndication</a>
+        <a href="#stack" class="footer-kw">MCP A2A ACP AP2 protocols</a>
+        <a href="#roadmap" class="footer-kw">carbon-aware AI scheduling</a>
+        <a href="#ledger" class="footer-kw">immutable AI audit log</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Platform</div>
+      <ul class="footer-col-links">
+        <li><a href="#architecture">Signal Infrastructure</a></li>
+        <li><a href="#architecture">Workflow Orchestration</a></li>
+        <li><a href="#principles">Fault Tolerance &amp; BFT</a></li>
+        <li><a href="#ledger">Observability &amp; Attribution</a></li>
+        <li><a href="#workflow">Mandate Chain Design</a></li>
+        <li><a href="#principles">Wasm Sandboxing</a></li>
+        <li><a href="#stack">Tech Stack</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Solutions</div>
+      <ul class="footer-col-links">
+        <li><a href="#contact">Enterprise Deployment</a></li>
+        <li><a href="#contact">Agentic Migration</a></li>
+        <li><a href="#contact">AI Infrastructure Audit</a></li>
+        <li><a href="#contact">Carbon-Aware Scheduling</a></li>
+        <li><a href="#contact">Privacy-Preserving AI</a></li>
+        <li><a href="#contact">EU AI Act Compliance</a></li>
+        <li><a href="#contact">Digital Twin Integration</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Resources</div>
+      <ul class="footer-col-links">
+        <li><a href="#blog">Case Studies</a></li>
+        <li><a href="#blog">Technical Guides</a></li>
+        <li><a href="#blog">Whitepapers</a></li>
+        <li><a href="#blog">Insights &amp; Research</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li><a href="#ledger">Truth Ledger Demo</a></li>
+        <li><a href="https://github.com" target="_blank">GitHub (Apache 2.0)</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-label">Company</div>
+      <ul class="footer-col-links">
+        <li><a href="#capabilities">About ARM</a></li>
+        <li><a href="#leadership">Leadership</a></li>
+        <li><a href="#process">Deployment Process</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Request Demo</a></li>
+        <li><a href="mailto:ops@arm-agency.com">ops@arm-agency.com</a></li>
+        <li><a href="https://linkedin.com" target="_blank">LinkedIn</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">&copy; 2026 Autonomous Resource Management Agency, Inc. &mdash; All rights reserved.</div>
+    <ul class="footer-bottom-links">
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Service</a></li>
+      <li><a href="#">Security</a></li>
+      <li><a href="mailto:ops@arm-agency.com">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+
+</div>
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('revealed'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => obs.observe(el));
+
+  // ── HAMBURGER MENU ──
+  const hamburger = document.getElementById('navHamburger');
+  const mobileMenu = document.getElementById('navMobileMenu');
+
+  function closeMenu() {
+    if (hamburger) hamburger.classList.remove('open');
+    if (mobileMenu) mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  if (hamburger) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.contains('open');
+      if (isOpen) { closeMenu(); }
+      else {
+        hamburger.classList.add('open');
+        mobileMenu.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    if (mobileMenu && mobileMenu.classList.contains('open')) closeMenu();
+  }, { passive: true });
+
+  // Blog filter
+  function filterPosts(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const items = document.querySelectorAll('#postsGrid .post-card-new, .insight-row');
+    items.forEach(el => {
+      const t = el.getAttribute('data-type');
+      el.style.display = (type === 'all' || t === type) ? '' : 'none';
+    });
+    const featured = document.querySelector('.post-featured');
+    if (featured) featured.style.display = (type === 'all' || type === 'case-study') ? '' : 'none';
+  }
+
+  // Newsletter
+  function subNewsletter(e) {
+    e.preventDefault();
+    const el = document.getElementById('nlEmail');
+    if (el && el.value) {
+      el.value = '';
+      el.placeholder = 'Subscribed \u2713';
+      el.style.borderColor = 'var(--green)';
+      el.style.color = 'var(--green)';
+    }
+  }
+
+  // Contact form
+  const cf = document.getElementById('contactForm');
+  if (cf) {
+    cf.addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.getElementById('formConfirm').style.display = 'block';
+      this.querySelector('.btn-submit').textContent = 'Sent \u2713';
+      this.querySelector('.btn-submit').style.background = 'var(--green)';
+    });
+  }
+
+  // ── TRUTH LEDGER DEMO ──
+  const ledgerData = [
+    { hash:'0xae7f...3c21', type:'Decision', typeClass:'decision', agent:'StrategicPlanner', action:'Decomposed procurement task into 4 sub-tasks via A2A delegation', ms:124, carbon:0.023, conf:97 },
+    { hash:'0x3b1a...f8e2', type:'Tool Call', typeClass:'tool', agent:'VendorScout', action:'MCP tool call: vendor_database.search(category="office_supplies", region="EU")', ms:312, carbon:0.041, conf:99 },
+    { hash:'0xc4d9...a1b3', type:'Consensus', typeClass:'consensus', agent:'BFT-Validator', action:'3-model BFT consensus: verified vendor recommendation (GPT-5 + Claude-4 + Gemini-2)', ms:2340, carbon:0.187, conf:96 },
+    { hash:'0x91ef...7d44', type:'Mandate', typeClass:'mandate', agent:'ComplianceGuard', action:'EU AI Act compliance check passed. Audit report generated and signed.', ms:89, carbon:0.012, conf:100 },
+    { hash:'0x52fa...e093', type:'Payment', typeClass:'payment', agent:'PaymentExecutor', action:'AP2 payment intent: $10,200 to EuroSupply GmbH (pending human approval)', ms:56, carbon:0.008, conf:99 },
+    { hash:'0xd8f1...b2c7', type:'Mandate', typeClass:'mandate', agent:'StrategicPlanner', action:'HITL escalation: awaiting human approval for payment exceeding $5,000 threshold', ms:23, carbon:0.003, conf:100 },
+  ];
+
+  let activeFilter = 'all';
+  let extraEntries = [];
+
+  function formatTime() {
+    return new Date().toLocaleTimeString('en-US', { hour12: true, hour:'numeric', minute:'2-digit', second:'2-digit' });
+  }
+
+  function renderLedger() {
+    const el = document.getElementById('ledgerEntries');
+    if (!el) return;
+    const all = [...ledgerData, ...extraEntries];
+    const filtered = activeFilter === 'all' ? all : all.filter(e => e.type === activeFilter);
+    el.innerHTML = filtered.map(e => `
+      <div class="ledger-entry">
+        <div><div class="le-hash">${e.hash}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px;">${formatTime()}</div></div>
+        <div class="le-type le-type-${e.typeClass}">${e.type}</div>
+        <div><div class="le-action">${e.action}</div><div class="le-agent">${e.agent} &mdash; ${e.ms}ms</div></div>
+        <div class="le-carbon">${e.carbon.toFixed(3)} gCO2</div>
+        <div class="le-meta" style="color:${e.conf>=99?'var(--green)':e.conf>=95?'var(--amber)':'var(--text-dim)'}">${e.conf}%</div>
+      </div>`).join('');
+    const tot = all.reduce((s,e) => s+e.carbon, 0);
+    const ec = document.getElementById('entryCount');
+    const vc = document.getElementById('verifiedCount');
+    const ct = document.getElementById('carbonTotal');
+    if (ec) ec.textContent = all.length;
+    if (vc) vc.textContent = all.length+'/'+all.length;
+    if (ct) ct.textContent = tot.toFixed(3);
+  }
+
+  function ledgerFilter(type, btn) {
+    document.querySelectorAll('.lf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = type;
+    renderLedger();
+  }
+
+  const newEntries = [
+    { hash:'0xa3c8...91ef', type:'Decision', typeClass:'decision', agent:'ProcurementAgent', action:'Rank-ordered vendor proposals by cost-efficiency and carbon footprint score', ms:78, carbon:0.016, conf:98 },
+    { hash:'0x7f2d...55ab', type:'Tool Call', typeClass:'tool', agent:'CarbonScheduler', action:'WattTime API call: grid.intensity(region="EU-WEST", timestamp=now())', ms:45, carbon:0.004, conf:100 },
+    { hash:'0xb91c...3e72', type:'Consensus', typeClass:'consensus', agent:'BFT-Validator', action:'2-of-3 model agreement on ShiftSchedule proposal — EcoFreight selected as optimal', ms:1890, carbon:0.142, conf:94 },
+  ];
+  let entryIdx = 0;
+  function addLedgerEntry() {
+    if (entryIdx < newEntries.length) { extraEntries.unshift(newEntries[entryIdx++]); renderLedger(); }
+  }
+
+  renderLedger();
+
+  // ── NAV ACTIVE STATE ──
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const navObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('nav-active'));
+        const match = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+        if (match) match.classList.add('nav-active');
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => navObs.observe(s));
+</script>
+</body>
+</html>
